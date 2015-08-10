@@ -1,9 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface, OverloadedStrings, BangPatterns, CPP #-}
 {-# LANGUAGE TypeFamilies, FlexibleInstances, UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-#if __GLASGOW_HASKELL__ < 710
-{-# LANGUAGE OverlappingInstances #-}
-#endif
 -- | High level interface for interfacing with JavaScript.
 module Haste.Foreign (
     module Haste.Any,
@@ -132,7 +129,7 @@ class JSFunc a where
   mkJSFunc :: a -> JS a
   arity    :: a -> Int
 
-instance (ToAny a, JS a ~ JSAny) => JSFunc a where
+instance {-# OVERLAPPABLE #-} (ToAny a, JS a ~ JSAny) => JSFunc a where
   mkJSFunc = toAny
   arity _  = 0
 

@@ -3,8 +3,7 @@
 
 -- For generic default instances
 {-# LANGUAGE TypeOperators, ScopedTypeVariables, FlexibleInstances,
-             FlexibleContexts, OverloadedStrings, DefaultSignatures,
-             OverlappingInstances #-}
+             FlexibleContexts, OverloadedStrings, DefaultSignatures #-}
 
 -- For less annoying instances
 {-# LANGUAGE TupleSections #-}
