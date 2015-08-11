@@ -9,13 +9,17 @@
 
 module Main (main) where
 
-import Distribution.InstalledPackageInfo.Binary()
 import qualified Distribution.Simple.PackageIndex as PackageIndex
 import Distribution.ModuleName hiding (main)
 import Distribution.InstalledPackageInfo
 import Distribution.Compat.ReadP
 import Distribution.ParseUtils
+#if MIN_VERSION_Cabal(1,22,0)
+import Distribution.Package hiding (depends, installedPackageId)
+#else
+import Distribution.InstalledPackageInfo.Binary()
 import Distribution.Package hiding (depends)
+#endif
 import Distribution.Text
 import Distribution.Version
 import System.FilePath as FilePath
@@ -1268,14 +1272,23 @@ brokenPackages pkgs = snd (closure [] pkgs)
 -- -----------------------------------------------------------------------------
 -- Manipulating package.conf files
 
+#if MIN_VERSION_Cabal(1,22,0)
+type InstalledPackageInfoString = InstalledPackageInfo_ ModuleName
+#else
 type InstalledPackageInfoString = InstalledPackageInfo_ String
+#endif
 
 convertPackageInfoOut :: InstalledPackageInfo -> InstalledPackageInfoString
 convertPackageInfoOut
     (pkgconf@(InstalledPackageInfo { exposedModules = e,
                                      hiddenModules = h })) =
+#if MIN_VERSION_Cabal(1,22,0)
+        pkgconf{ exposedModules = e,
+                 hiddenModules  = h }
+#else
         pkgconf{ exposedModules = map display e,
                  hiddenModules  = map display h }
+#endif
 
 convertPackageInfoIn :: InstalledPackageInfoString -> InstalledPackageInfo
 convertPackageInfoIn
@@ -1283,7 +1296,11 @@ convertPackageInfoIn
                                      hiddenModules = h })) =
         pkgconf{ exposedModules = map convert e,
                  hiddenModules  = map convert h }
+#if MIN_VERSION_Cabal(1,22,0)
+    where convert = id
+#else
     where convert = fromJust . simpleParse
+#endif
 
 writeNewConfig :: Verbosity -> FilePath -> [InstalledPackageInfo] -> IO ()
 writeNewConfig verbosity filename ipis = do
@@ -1512,7 +1529,11 @@ doesFileExistOnPath filenames paths = go fullFilenames
 
 checkModules :: InstalledPackageInfo -> Validate ()
 checkModules pkg = do
+#if MIN_VERSION_Cabal(1,22,0)
+  mapM_ findModule (map exposedName (exposedModules pkg) ++ hiddenModules pkg)
+#else
   mapM_ findModule (exposedModules pkg ++ hiddenModules pkg)
+#endif
   where
     findModule modl =
       -- there's no interface file for GHC.Prim
